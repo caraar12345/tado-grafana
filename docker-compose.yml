@@ -1,0 +1,50 @@
+version: '3'
+networks:
+  internal:
+    driver: bridge
+services:
+  grafana:
+    hostname: grafana
+    container_name: grafana
+    image: grafana/grafana
+    networks:
+      - internal
+    ports:
+      - 3000:3000
+    volumes:
+      - /opt/monitoring.conf.d/grafana/config:/etc/grafana
+      - /opt/monitoring.conf.d/grafana/data:/config
+    environment:
+      - GF_PATHS_DATA=/config/data
+      - GF_PATHS_LOGS=/config/logs
+      - GF_PATHS_PLUGINS=/config/plugins
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel,grafana-worldmap-panel
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+  prometheus:
+    hostname: prometheus
+    container_name: prometheus
+    image: prom/prometheus
+    networks:
+      - internal
+    ports:
+      - 9090:9090
+    volumes:
+      - /opt/monitoring.conf.d/prometheus/config:/etc/prometheus
+      - /opt/monitoring.conf.d/prometheus/data:/prometheus
+    environment:
+      - TZ=Europe/London
+    restart: unless-stopped
+
+  tado-exporter:
+    hostname: tado-exporter
+    container_name: tado-exporter
+    image: ekofr/tado-exporter:latest
+    networks:
+      - internal
+    environment:
+      - EXPORTER_USERNAME=
+      - EXPORTER_PASSWORD=
+      - EXPORTER_CLIENT_SECRET=
